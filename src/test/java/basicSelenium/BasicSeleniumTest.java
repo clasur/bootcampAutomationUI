@@ -1,17 +1,21 @@
 package basicSelenium;
 
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
 import java.util.Date;
+import java.util.List;
 
 public class BasicSeleniumTest {
 
@@ -53,27 +57,37 @@ public class BasicSeleniumTest {
 
         //create task
         String nameTask = "New Task";
-        driver.findElement(By.xpath("//textarea[@id='NewItemContentInput']")).sendKeys(nameTask);
+        WebElement textTask = driver.findElement(By.xpath("//textarea[@id='NewItemContentInput']"));
+        textTask.sendKeys(nameTask);
         driver.findElement(By.xpath("//input[@id='NewItemAddButton']")).click();
+
 
         Thread.sleep(1000);
         int actualResult1=driver.findElements(By.xpath("//div [@class=\"ItemContentDiv\"]")).size();
-        Assertions.assertTrue(actualResult1 >= 1
+        Assertions.assertTrue(             actualResult1 >= 1
                 ,"ERROR The task was not created");
 
         //update task
-        String nameTaskUpdate = "Update Task";
-        driver.findElement(By.xpath("//div[@class=\"ItemContentDiv\"][1]")).click();
-        driver.findElement(By.xpath("//div[@class=\"ItemContentDiv\"][1]")).clear();
-        Thread.sleep(4000);
-        driver.findElement(By.xpath("//textarea[@id=\"ItemEditTextbox\"][1]")).sendKeys(nameTaskUpdate);
-        Thread.sleep(3000);
-        driver.findElement(By.xpath("//img[@class=\"ItemMenu\" and @itemid=\"11079150\"]")).click();
-        driver.findElement(By.xpath("//ul[@id=\"itemContextMenu\"]//li[.= 'Edit']]")).click();
+        String nameTaskUpdate = "Update";
+        WebElement items = driver.findElement(By.id("mainItemList"));
+        Thread.sleep(2000);
+        List<WebElement> items2 = items.findElements(By.tagName("li"));
+        WebElement item = items2.get(items2.size()-1);
+        String idItem = "//textarea [@itemid="+item.getAttribute("itemid")+"]";
+        driver.findElement(By.xpath("//div[@itemid="+item.getAttribute("itemid")+"]")).click();
+        WebDriverWait waitById = new WebDriverWait(driver, Duration.ofSeconds(5));
+        waitById.until(ExpectedConditions.elementToBeClickable(By.xpath(idItem)));
+        WebElement textArea = driver.findElement(By.xpath(idItem));
+        textArea.click();
+
+        textArea.sendKeys(nameTaskUpdate);
+
+        driver.findElement(By.xpath("//img[contains(@style,'inline')]")).click();
+        driver.findElement(By.xpath("//ul[@id=\"itemContextMenu\"]//a[@href=\"#edit\"]")).click();
         driver.findElement(By.xpath("//*[@id=\"CurrentProjectTitle\"]")).click();
 
         Thread.sleep(1000);
-        int actualResult2=driver.findElements(By.xpath("//div[@class=\"ItemContentDiv\"][1]")).size();
+        int actualResult2 =driver.findElements(By.xpath("//div[contains(@style,'color: rgb(0, 0, 0);')]")).size();
         Assertions.assertTrue(actualResult2 >= 1,"ERROR the task  as not update");
 
     }
